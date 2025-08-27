@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Azure Daily Checks - Report</title>
+  <link rel="stylesheet" href="report.css" />
+  <style>
+    /* Inline minimal fallback if CSS not found */
+    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #111827; }
+    .header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+    .muted { color: #6B7280; font-size: 0.9rem; }
+    .chip { display: inline-block; padding: 2px 8px; border-radius: 12px; background: #E5E7EB; color: #111827; font-size: 0.8rem; margin-left: 6px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { padding: 8px 10px; border-bottom: 1px solid #E5E7EB; text-align: left; vertical-align: top; }
+    th { background: #F9FAFB; font-weight: 600; }
+    .status { font-weight: 600; }
+    .status.na { color: #6B7280; }
+    .status.warn { color: #b45309; }
+    .status.crit { color: #b91c1c; }
+    .status.ok { color: #065f46; }
+    .section { margin-top: 24px; }
+    code { background: #F3F4F6; padding: 1px 6px; border-radius: 4px; }
+  </style>
+  <!-- Generated: {{generatedAt}} -->
+  <!-- Schema: {{schemaVersion}} -->
+  <!-- Owner: {{owner}} -->
+  <!-- Description: {{description}} -->
+  <!-- v1 template: config-only view (no live checks) -->
+  <!-- To collect metrics, wire Get-AzMetric in Invoke-DailyChecks and pass results into this template. -->
+  <!-- RESPECT: no secrets in output; identifiers only. -->
+  
+</head>
+<body>
+  <div class="header">
+    <h1>Azure Daily Checks</h1>
+    <div class="muted">Generated: <span>{{generatedAt}}</span></div>
+  </div>
+
+  <div>
+    <span class="chip">Resources: {{resourceCount}}</span>
+    <span class="chip">SQL: {{sqlCount}}</span>
+    <span class="chip">VMs: {{vmCount}}</span>
+  </div>
+
+  <div class="section">
+    <table aria-describedby="Configured checks by resource">
+      <thead>
+        <tr>
+          <th style="width: 28%">Resource</th>
+          <th style="width: 10%">Type</th>
+          <th>Configured Checks</th>
+          <th style="width: 15%">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- RESOURCES_TABLE_ROWS -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Findings</h2>
+    <!-- FINDINGS_SECTIONS -->
+  </div>
+
+  <div class="section muted">
+    <p>
+      This is a configuration-driven template view. For VM checks, thresholds map to Azure Monitor metrics (e.g., <code>Percentage CPU</code>). For SQL checks, thresholds reflect instance/database health criteria.
+    </p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,18 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors/IDE
+.vscode/
+.idea/
+
+# Output artifacts
+/out/
+
+# Config: commit only example JSONs
+config/*.json
+!config/*.example.json
+
+# PowerShell cache
+*.cache
+

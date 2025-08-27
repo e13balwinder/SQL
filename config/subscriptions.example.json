@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1.0.0",
+  "global": {
+    "mode": "filter",
+    "includeTags": ["prod"],
+    "excludeTags": []
+  },
+  "subscriptions": [
+    {
+      "subscriptionId": "00000000-0000-0000-0000-000000000000",
+      "name": "Prod-Sub",
+      "include": true,
+      "includeTags": ["sql", "app"],
+      "excludeTags": []
+    }
+  ]
+}
+
