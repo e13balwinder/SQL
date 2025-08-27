@@ -1,6 +1,7 @@
-Failed to parse config JSON at '..\config\health-check-config.json'. Error: A parameter cannot be found that matches parameter name 'Depth'.
-At C:\Users\bsingh\Downloads\Archive\modules\Common\Get-HealthCheckConfig.psm1:21 char:9
-+         throw "Failed to parse config JSON at '$Path'. Error: $($_.Ex ...
-+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : OperationStopped: (Failed to parse...r name 'Depth'.:String) [], RuntimeException
-    + FullyQualifiedErrorId : Failed to parse config JSON at '..\config\health-check-config.json'. Error: A parameter cannot be found that matches parameter name 'Depth'.
+Invoke-DailyChecks.ps1 : The term 'begin' is not recognized as the name of a cmdlet, function, script file, or operable
+program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ .\Invoke-DailyChecks.ps1 -Config ..\config\health-check-config.json - ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (begin:String) [Invoke-DailyChecks.ps1], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException,Invoke-DailyChecks.ps1
