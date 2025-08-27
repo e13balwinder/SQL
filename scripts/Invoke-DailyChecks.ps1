@@ -74,11 +74,24 @@ function Get-ResourceDisplayName {
 }
 
 $subsCfg = Load-SubscriptionsConfig -path $Subscriptions
-$targetResources = @($cfg.Resources | Where-Object { Resource-PassesFilters $_ $subsCfg })
+
+# Normalize resources to an array for reliable counting/enumeration
+$cfgResources = @()
+if ($null -ne $cfg.Resources) {
+    if ($cfg.Resources -is [System.Array]) { $cfgResources = $cfg.Resources }
+    else { $cfgResources = @($cfg.Resources) }
+}
+
+$targetResources = @()
+foreach ($r in $cfgResources) {
+    if (Resource-PassesFilters $r $subsCfg) { $targetResources += $r }
+}
 
 if ($ListResources) {
-    Write-Host "Included resources after filters: $($targetResources.Count)" -ForegroundColor Cyan
-    $byType = $targetResources | Group-Object -Property type
+    $includedCount = ($targetResources | Measure-Object).Count
+    Write-Host "Included resources after filters: $includedCount" -ForegroundColor Cyan
+    $byType = @()
+    if ($includedCount -gt 0) { $byType = $targetResources | Group-Object -Property type }
     foreach ($g in $byType) { Write-Host ("  {0}: {1}" -f $g.Name, $g.Count) }
     foreach ($r in $targetResources) {
         $name = Get-ResourceDisplayName -Resource $r
