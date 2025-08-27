@@ -3,7 +3,11 @@
   "global": {
     "mode": "filter",
     "includeTags": ["prod"],
-    "excludeTags": []
+    "excludeTags": [],
+    "azureTagFilter": {
+      "anyOf": ["Environment=Prod", "Role=App"],
+      "allOf": []
+    }
   },
   "subscriptions": [
     {
@@ -11,8 +15,11 @@
       "name": "Prod-Sub",
       "include": true,
       "includeTags": ["sql", "app"],
-      "excludeTags": []
+      "excludeTags": [],
+      "azureTagFilter": {
+        "anyOf": ["Environment=Prod"],
+        "allOf": ["Owner"]
+      }
     }
   ]
 }
-

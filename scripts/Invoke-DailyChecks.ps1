@@ -13,6 +13,8 @@ param(
 
     [switch]$ListResources, # list included resources after filters, do not run checks
 
+    [switch]$DiscoverAzure, # discover Azure VMs by Azure tags in subscriptions JSON
+
     [switch]$SkipChecks # v1: show config-only report when set
 )
 
@@ -22,6 +24,7 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Path $PSScriptRoot -Parent
 Import-Module (Join-Path $repoRoot 'modules/Common/Get-HealthCheckConfig.psm1') -Force | Out-Null
 Import-Module (Join-Path $repoRoot 'modules/Common/Invoke-HealthChecks.psm1') -Force | Out-Null
+Import-Module (Join-Path $repoRoot 'modules/Common/Discover-AzureResources.psm1') -Force | Out-Null
 
 $cfg = Get-HealthCheckConfig -Path $Config
 
@@ -87,9 +90,18 @@ foreach ($r in $cfgResources) {
     if (Resource-PassesFilters $r $subsCfg) { $targetResources += $r }
 }
 
+$discovered = @()
+if ($DiscoverAzure) {
+    if (-not $subsCfg) { throw 'Discovery requires -Subscriptions pointing to a subscriptions JSON.' }
+    Write-Host 'Discovering Azure VMs via subscriptions/tags...' -ForegroundColor Cyan
+    $discovered = Get-AzureVmResourcesFromFilter -SubscriptionsConfig $subsCfg
+}
+
 if ($ListResources) {
     $includedCount = ($targetResources | Measure-Object).Count
-    Write-Host "Included resources after filters: $includedCount" -ForegroundColor Cyan
+    $discCount = ($discovered | Measure-Object).Count
+    Write-Host "Included resources after filters: $includedCount (config)" -ForegroundColor Cyan
+    if ($DiscoverAzure) { Write-Host "Discovered resources: $discCount (Azure)" -ForegroundColor Cyan }
     $byType = @()
     if ($includedCount -gt 0) { $byType = $targetResources | Group-Object -Property type }
     foreach ($g in $byType) { Write-Host ("  {0}: {1}" -f $g.Name, $g.Count) }
@@ -97,16 +109,21 @@ if ($ListResources) {
         $name = Get-ResourceDisplayName -Resource $r
         Write-Host ("- {0} | {1} | sub={2} | tags=[{3}]" -f $name, $r.type, $r.subscriptionId, ($r.tags -join ','))
     }
+    foreach ($r in $discovered) {
+        $name = Get-ResourceDisplayName -Resource $r
+        Write-Host ("- {0} | {1} | sub={2} | rg={3} (discovered)" -f $name, $r.type, $r.subscriptionId, $r.resourceGroup)
+    }
     exit 0
 }
 
 $results = @()
 if (-not $SkipChecks) {
     # Collect Azure VM metrics and SQL checks
+    $allResources = @($targetResources + $discovered)
     if ($Subscriptions) {
-        $results = Invoke-HealthChecks -Config $Config -IncludeVmMetrics -SubscriptionsConfigPath $Subscriptions
+        $results = Invoke-HealthChecks -Config $Config -IncludeVmMetrics -SubscriptionsConfigPath $Subscriptions -Resources $allResources
     } else {
-        $results = Invoke-HealthChecks -Config $Config -IncludeVmMetrics
+        $results = Invoke-HealthChecks -Config $Config -IncludeVmMetrics -Resources $allResources
     }
 }
 

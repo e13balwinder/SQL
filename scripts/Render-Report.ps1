@@ -96,8 +96,39 @@ function New-ResourceRowHtml {
 "@
 }
 
+# Build combined resource list: config resources + any new resources present in Results
+$cfgResources = @()
+if ($null -ne $cfg.Resources) {
+    if ($cfg.Resources -is [System.Array]) { $cfgResources = $cfg.Resources } else { $cfgResources = @($cfg.Resources) }
+}
+
+function New-ResourceFromResult {
+    param([pscustomobject]$r)
+    $id = [string]$r.ResourceId
+    $type = [string]$r.ResourceType
+    $identifier = $null
+    if ($type -eq 'AzureVM') {
+        $name = $id
+        if ($id -match '/virtualMachines/([^/]+)') { $name = $Matches[1] }
+        $identifier = [pscustomobject]@{ name = $name; resourceId = $id }
+    } else {
+        $identifier = [pscustomobject]@{ name = $id }
+    }
+    [pscustomobject]@{ id = $id; type = $type; identifier = $identifier; tags=@() }
+}
+
+$map = @{}
+foreach ($r in $cfgResources) { $map[[string]$r.id] = $r }
+foreach ($rr in @($Results)) {
+    if (-not $rr) { continue }
+    $rid = [string]$rr.ResourceId
+    if (-not $rid) { continue }
+    if (-not $map.ContainsKey($rid)) { $map[$rid] = New-ResourceFromResult -r $rr }
+}
+$allResources = $map.GetEnumerator() | ForEach-Object { $_.Value }
+
 $rows = @()
-foreach ($res in $cfg.Resources) {
+foreach ($res in $allResources) {
     $rows += New-ResourceRowHtml -Resource $res -AllResults $Results
 }
 
@@ -162,7 +193,7 @@ function New-FindingsSectionHtml {
 }
 
 $findingsSections = @()
-foreach ($res in $cfg.Resources) {
+foreach ($res in $allResources) {
     $sec = New-FindingsSectionHtml -Resource $res -AllResults $Results
     if ($sec) { $findingsSections += $sec }
 }

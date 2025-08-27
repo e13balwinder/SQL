@@ -12,6 +12,9 @@ function Invoke-HealthChecks {
         [Parameter()]
         [string]$SubscriptionsConfigPath,
 
+        [Parameter()]
+        [object[]]$Resources,
+
         [switch]$WhatIf
     )
 
@@ -78,7 +81,16 @@ function Invoke-HealthChecks {
     }
 
     $subsCfg = Load-SubscriptionsConfig -path $SubscriptionsConfigPath
-    $targetResources = @($cfg.Resources | Where-Object { Resource-PassesFilters $_ $subsCfg })
+    $targetResources = @()
+    if ($PSBoundParameters.ContainsKey('Resources') -and $Resources) {
+        $targetResources = @($Resources)
+    } else {
+        $cfgResources = @()
+        if ($null -ne $cfg.Resources) {
+            if ($cfg.Resources -is [System.Array]) { $cfgResources = $cfg.Resources } else { $cfgResources = @($cfg.Resources) }
+        }
+        foreach ($r in $cfgResources) { if (Resource-PassesFilters $r $subsCfg) { $targetResources += $r } }
+    }
 
     $results = @()
     foreach ($res in $targetResources) {
