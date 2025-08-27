@@ -1,0 +1,253 @@
+{
+  "schemaVersion": "1.2.0",
+  "metadata": {
+    "description": "Thresholds for daily health checks across SQL Server and Azure VM resources. Copy this .example.json and customize as needed.",
+    "owner": "platform-ops",
+    "generatedBy": "codex-cli",
+    "lastUpdated": "2025-08-27"
+  },
+  "defaults": {
+    "sqlServer": {
+      "connection": {
+        "loginTimeoutSeconds": 15,
+        "queryTimeoutSeconds": 60
+      },
+      "auth": {
+        "mode": "auto", 
+        "tenantId": "", 
+        "resourceUrl": "https://database.windows.net/"
+      },
+      "checks": {
+        "instanceReachable": { "connectTimeoutSeconds": 15 },
+        "cpuPercent": { "warn": 75, "crit": 90, "windowMinutes": 15 },
+        "memory": { "pleMinSeconds": 300 },
+        "agentRunning": { "required": true },
+        "blockedSessions": { "warn": 5, "crit": 20, "windowMinutes": 10 },
+        "deadlocksPerHour": { "warn": 1, "crit": 3 },
+        "databaseStatus": {
+          "warnStates": ["OFFLINE", "EMERGENCY"],
+          "failStates": ["SUSPECT", "RECOVERY_PENDING", "RECOVERY"]
+        },
+        "dbFreeSpacePercent": { "warn": 15, "crit": 5 },
+        "backupAgeHours": {
+          "fullWarn": 26,
+          "fullCrit": 50,
+          "diffWarn": 8,
+          "diffCrit": 16,
+          "logWarn": 2,
+          "logCrit": 4
+        },
+        "jobFailures24h": { "warn": 1, "crit": 3 },
+        "tempdb": {
+          "dataFileCountPerCore": 1,
+          "freeSpacePercentWarn": 15,
+          "freeSpacePercentCrit": 5
+        },
+        "indexFragmentation": { "warn": 30, "crit": 50, "minPages": 1000 },
+        "vlfCount": { "warn": 200, "crit": 1000 },
+        "ioLatencyMs": {
+          "readWarn": 20,
+          "readCrit": 50,
+          "writeWarn": 20,
+          "writeCrit": 50
+        },
+        "diskFreePercent": {
+          "dataWarn": 15,
+          "dataCrit": 5,
+          "logWarn": 20,
+          "logCrit": 10
+        },
+        "availabilityGroups": {
+          "requiredHealthy": true,
+          "allowedSyncStates": ["SYNCHRONIZED", "SYNCHRONIZING"]
+        },
+        "errorLogSeverityMin": { "warnAtOrAbove": 17 }
+      },
+      "scriptChecks": [
+        {
+          "id": "sql.backup.full.age",
+          "enabled": true,
+          "name": "Full Backup Age (hours)",
+          "file": "sql/backup_age_full_hours.sql",
+          "evaluator": {
+            "type": "scalar-threshold",
+            "column": "full_backup_age_hours",
+            "operator": "GreaterThan",
+            "warn": 26,
+            "crit": 50,
+            "unit": "hours"
+          }
+        },
+        {
+          "id": "sql.jobs.failures.24h",
+          "enabled": false,
+          "name": "Job Failures (24h)",
+          "file": "sql/job_failures_24h_count.sql",
+          "evaluator": {
+            "type": "scalar-threshold",
+            "column": "job_failed_24h",
+            "operator": "GreaterThan",
+            "warn": 1,
+            "crit": 3,
+            "unit": "count"
+          }
+        },
+        {
+          "id": "sql.blocked.sessions",
+          "enabled": true,
+          "name": "Blocked Sessions",
+          "file": "sql/blocked_sessions_count.sql",
+          "evaluator": {
+            "type": "scalar-threshold",
+            "column": "blocked_sessions",
+            "operator": "GreaterThan",
+            "warn": 5,
+            "crit": 20,
+            "unit": "sessions"
+          }
+        },
+        {
+          "id": "sql.ag.unhealthy",
+          "enabled": false,
+          "name": "AG Unhealthy Replicas",
+          "file": "sql/ag_unhealthy_replicas_count.sql",
+          "evaluator": {
+            "type": "scalar-threshold",
+            "column": "ag_unhealthy",
+            "operator": "GreaterThan",
+            "warn": 0,
+            "crit": 1,
+            "unit": "replicas"
+          }
+        },
+        {
+          "id": "sql.db.state.problem",
+          "enabled": false,
+          "name": "DB Offline/Suspect Count",
+          "file": "sql/db_offline_or_suspect_count.sql",
+          "evaluator": {
+            "type": "scalar-threshold",
+            "column": "db_problem",
+            "operator": "GreaterThan",
+            "warn": 0,
+            "crit": 1,
+            "unit": "databases"
+          }
+        }
+      ]
+    },
+    "azureVm": {
+      "metricChecks": [
+        {
+          "id": "vm.cpu",
+          "enabled": true,
+          "name": "Percentage CPU",
+          "namespace": "Microsoft.Compute/virtualMachines",
+          "aggregation": "Average",
+          "operator": "GreaterThan",
+          "warn": 75,
+          "crit": 90,
+          "windowMinutes": 15,
+          "granularityMinutes": 1,
+          "treatNoDataAs": "Ignore"
+        },
+        {
+          "id": "vm.disk.read.ops",
+          "enabled": false,
+          "name": "Disk Read Operations/Sec",
+          "namespace": "Microsoft.Compute/virtualMachines",
+          "aggregation": "Average",
+          "operator": "GreaterThan",
+          "warn": 2000,
+          "crit": 4000,
+          "windowMinutes": 15,
+          "granularityMinutes": 1,
+          "treatNoDataAs": "Ignore"
+        },
+        {
+          "id": "vm.disk.write.ops",
+          "enabled": false,
+          "name": "Disk Write Operations/Sec",
+          "namespace": "Microsoft.Compute/virtualMachines",
+          "aggregation": "Average",
+          "operator": "GreaterThan",
+          "warn": 2000,
+          "crit": 4000,
+          "windowMinutes": 15,
+          "granularityMinutes": 1,
+          "treatNoDataAs": "Ignore"
+        },
+        {
+          "id": "vm.net.in.total",
+          "enabled": false,
+          "name": "Network In Total",
+          "namespace": "Microsoft.Compute/virtualMachines",
+          "aggregation": "Total",
+          "operator": "LessThan",
+          "warn": 10485760,
+          "crit": 1048576,
+          "windowMinutes": 60,
+          "granularityMinutes": 1,
+          "treatNoDataAs": "Ignore"
+        },
+        {
+          "id": "vm.net.out.total",
+          "enabled": false,
+          "name": "Network Out Total",
+          "namespace": "Microsoft.Compute/virtualMachines",
+          "aggregation": "Total",
+          "operator": "LessThan",
+          "warn": 10485760,
+          "crit": 1048576,
+          "windowMinutes": 60,
+          "granularityMinutes": 1,
+          "treatNoDataAs": "Ignore"
+        }
+      ],
+      "resourceState": {
+        "powerState": { "expected": "running" },
+        "provisioningState": { "required": "Succeeded" },
+        "guestAgent": { "requiredStatus": "Ready" }
+      }
+    }
+  },
+  "resources": [
+    {
+      "id": "sql-prod-01",
+      "type": "SqlServer",
+      "identifier": {
+        "server": "sql-prod-01.contoso.local",
+        "instance": "MSSQLSERVER",
+        "port": 1433
+      },
+      "subscriptionId": "00000000-0000-0000-0000-000000000000",
+      "resourceGroup": "rg-sql-prod",
+      "tags": ["prod", "sql"],
+      "thresholdOverrides": {
+        "backupAgeHours": { "fullWarn": 30, "fullCrit": 54 },
+        "scriptChecks": {
+          "sql.backup.full.age": { "enabled": false, "evaluator": { "warn": 30, "crit": 54 } }
+        }
+      }
+    },
+    {
+      "id": "vm-app-01",
+      "type": "AzureVM",
+      "identifier": {
+        "name": "vm-app-01",
+        "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-app-prod/providers/Microsoft.Compute/virtualMachines/vm-app-01"
+      },
+      "subscriptionId": "00000000-0000-0000-0000-000000000000",
+      "resourceGroup": "rg-app-prod",
+      "tags": ["prod", "app"],
+      "thresholdOverrides": {
+        "metricChecks": {
+          "vm.cpu": { "warn": 65, "crit": 85 }
+        },
+        "resourceState": {
+          "powerState": { "expected": "stopped" }
+        }
+      }
+    }
+  ]
+}
