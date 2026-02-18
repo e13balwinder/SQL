@@ -1,0 +1,5 @@
+Stepladder is an automated Azure SQL “autopilot” for performance and cost control.
+
+It runs every minute, checks recent database load (CPU/IO), and adjusts SQL Database vCores up or down within approved limits. It also enforces higher minimum capacity during business hours and lower minimums off-hours, so performance is protected when teams are active and costs are reduced when demand drops.
+
+It includes built-in safeguards: one-at-a-time execution lock, cooldown windows to prevent rapid thrashing, pending-operation timeout handling, state tracking for auditability, and a dry-run mode for safe rollout. It also automatically aligns MAXDOP with current vCores to keep query behavior consistent after scaling.
